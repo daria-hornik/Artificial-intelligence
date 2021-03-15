@@ -56,7 +56,7 @@ namespace Lab01
             return x1 * y2 - x2 * y1;
         }
 
-        private bool CheckIsPointBelongsToSegment(Point x, Point y, Point z)
+        private bool CheckIfPointBelongsToSegment(Point x, Point y, Point z)
         {
             return Math.Min(x.X, y.X) <= z.X && z.X <= Math.Max(x.X, y.X) && Math.Min(x.Y, y.Y) <= z.Y && z.Y <= Math.Max(x.Y, y.Y);
         }
@@ -77,14 +77,13 @@ namespace Lab01
             if ((v1 > 0 && v2 < 0 || v1 < 0 && v2 > 0) && (v3 > 0 && v4 < 0 || v3 < 0 && v4 > 0)) return true;
 
             //sprawdzenie, czy koniec odcinka leży na drugim
-            if (v1 == 0 && CheckIsPointBelongsToSegment(C, D, A)) return true;
-            if (v2 == 0 && CheckIsPointBelongsToSegment(C, D, B)) return true;
-            if (v3 == 0 && CheckIsPointBelongsToSegment(A, B, C)) return true;
-            if (v4 == 0 && CheckIsPointBelongsToSegment(A, B, D)) return true;
+            if (v1 == 0 && CheckIfPointBelongsToSegment(C, D, A)) return true;
+            if (v2 == 0 && CheckIfPointBelongsToSegment(C, D, B)) return true;
+            if (v3 == 0 && CheckIfPointBelongsToSegment(A, B, C)) return true;
+            if (v4 == 0 && CheckIfPointBelongsToSegment(A, B, D)) return true;
 
             //odcinki nie mają punktów wspólnych
             return false;
         }
-
     }
 }

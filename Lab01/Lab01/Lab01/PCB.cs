@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace Lab01
 {
@@ -27,20 +28,88 @@ namespace Lab01
             return sum;
         }
 
+        //Funkcje ograniczające
+        public bool IsIntersectWithOthers(Path path, Segment segment)
+        {
+            foreach (var pathInBoard in Paths)
+            {
+                if (!pathInBoard.Equals(path))
+                {
+                    if (pathInBoard.CountIntersects(segment) != 0)
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        public bool IsIntersecToMyself(Path path, Segment segment)
+        {
+            var overlap = path.IsSegmentsOverlap(segment);
+
+            foreach (var pathInBoard in Paths)
+            {
+                if (pathInBoard.Equals(path))
+                {
+                    var intersectCount = pathInBoard.CountIntersects(segment);
+                    if (intersectCount == 1 || intersectCount == 0)
+                        return false;
+                    else if (intersectCount == 2 && overlap)
+                        return false;
+                    else 
+                        return true;
+                }
+            }
+            return true;
+        }
+
+        public bool IsActualPointAStartEndPointOtherPaths(Path path, Point point)
+        {
+            for (var i = 0; i<Paths.Count; i++)
+            {
+                if (Paths[i] != path)
+                {
+                    if (PointList[i].Item2.Equals(point) || PointList[i].Item1.Equals(point))
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        private bool IsInBoard(Point point)
+        {
+            return point.X < BoardX && point.Y < BoardY && point.X >= 0 && point.Y >= 0;
+        }
+
+        public bool IsAllConstraintCorrect(Path path, Segment segment)
+        {
+            return !IsIntersectWithOthers(path, segment) && IsInBoard(segment.GetEndPoint()) &&
+                   !IsIntersecToMyself(path, segment)
+                   && !IsActualPointAStartEndPointOtherPaths(path, segment.GetEndPoint());
+        }
+
         public void BuildRandomPaths()
         {
             for (int i = 0; i < PointList.Count; i++)
                 Paths.Add(new Path(PointList[i].Item1, PointList[i].Item2));
 
-            for (int i = 0; i < PointList.Count; i++)
+            for (int i = 0; i < Paths.Count; i++)
             {
-                while (!Paths[i].IsPathFinished(PointList[i].Item2))
+                while (!Paths[i].IsPathFinished())
                 {
-                    Paths[i].CreateSegment();
-
+                    var isCorrectSegment = false;
+                    while (!isCorrectSegment)
+                    {
+                        Segment newSegment = Paths[i].CreateSegment();
+                        if (IsAllConstraintCorrect(Paths[i], newSegment))
+                        {
+                            Paths[i].AddSegment(newSegment);
+                            isCorrectSegment = true;
+                        }
+                    }
                 }
             }
         }
+
 
         public void PathsInfo()
         {
@@ -52,9 +121,9 @@ namespace Lab01
                 i++;
             }
 
-            Console.WriteLine(CountPenaltyFunction());
-            Console.WriteLine(CountIntersection());
-        }
+            Console.WriteLine($"Całkowita kara: {CountPenaltyFunction()}");
+            Console.WriteLine($"Kara za przecięcia: {CountIntersection()}");
+    }
 
         public int CountIntersection()
         {
@@ -67,8 +136,8 @@ namespace Lab01
                     {
                         for (int s2 = 0; s2 < Paths[j].SegmentList.Count; s2++)
                         {
-                            Paths[i].SegmentList[s1].IsIntersect(Paths[j].SegmentList[s2]);
-                            counter++;
+                            if (Paths[i].SegmentList[s1].IsIntersect(Paths[j].SegmentList[s2]))
+                                counter++;
                         }
                     }
                 }

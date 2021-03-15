@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Globalization;
 using System.Linq;
 
 namespace Lab01
@@ -7,6 +9,10 @@ namespace Lab01
     class Path
     {
         private static int STEP = 1;
+        private static int DEFAULT_PROBABILITY = 2;
+        private static int BETTER_PROPABILITY = 3;
+        private static int WORST_PROPABILITY = 1;
+
         public List<Segment> SegmentList { get; set; }
         public Point ActualPoint { get; set; }
         public Point EndPoint { get; set; }
@@ -34,16 +40,14 @@ namespace Lab01
             return SegmentList.Count();
         }
 
-        public void CreateSegment()
+        public Segment CreateSegment()
         {
-            Segment newSegment = new Segment()
+            return new Segment()
             {
                 StartPoint = (Point) ActualPoint.Clone(),
                 Length = STEP,
-                Direction = GetTheBestDirection(),
+                Direction = GetWeightedRandomDirection(),
             };
-            AddSegment(newSegment);
-            ChangeLocationOfActualPoint(newSegment.Direction);
         }
 
         private struct DirectionWithWeight
@@ -58,48 +62,88 @@ namespace Lab01
             }
         }
 
-        private Direction GetWeightedRandomDirection(List<DirectionWithWeight> directions, int accumulatedWeight)
+        private Direction RandomDirection(List<DirectionWithWeight> directions)
         {
             Random rand = new Random();
-            double r = rand.NextDouble() * accumulatedWeight;
+            var sum = 0;
 
-            foreach (DirectionWithWeight direction in directions)
-            { 
-                if (direction.Weight >= r) 
-                    return direction.Direction;
+            foreach (var direction in directions)
+                sum += direction.Weight;
+
+            Direction[] tempTab = new Direction[sum];
+            var index = 0;
+            foreach (var direction in directions)
+            {
+                for (int j = 0; j < direction.Weight; j++)
+                {
+                    tempTab[index] = direction.Direction;
+                    index++;
+                }
             }
-            return default(Direction); 
+          
+            int r = rand.Next(0, sum);
+            return tempTab[r]; 
         }
 
-        public Direction GetTheBestDirection()
+        public Direction GetWeightedRandomDirection()
         {
             List<DirectionWithWeight> directionsWithWeight = new List<DirectionWithWeight>();
-            int accumulatedWeight = 0;
             int xLevelDifference = ActualPoint.X - EndPoint.X;
             int yLevelDifference = ActualPoint.Y - EndPoint.Y;
 
-            int weightX = Math.Abs(xLevelDifference);
-            accumulatedWeight += weightX;
-
-            int weightY = Math.Abs(yLevelDifference);
-            accumulatedWeight += weightY;
-
             if (xLevelDifference > 0)
-                directionsWithWeight.Add(new DirectionWithWeight(Direction.Left, weightX));
+            {
+                directionsWithWeight.Add(new DirectionWithWeight(Direction.Left, BETTER_PROPABILITY));
+                directionsWithWeight.Add(new DirectionWithWeight(Direction.Right, WORST_PROPABILITY));
+            }
+            else if (xLevelDifference == 0)
+            {
+                directionsWithWeight.Add(new DirectionWithWeight(Direction.Left, DEFAULT_PROBABILITY));
+                directionsWithWeight.Add(new DirectionWithWeight(Direction.Right, DEFAULT_PROBABILITY));
+            }
             else
-                directionsWithWeight.Add(new DirectionWithWeight(Direction.Right, weightX));
+            {
+                directionsWithWeight.Add(new DirectionWithWeight(Direction.Left, WORST_PROPABILITY));
+                directionsWithWeight.Add(new DirectionWithWeight(Direction.Right, BETTER_PROPABILITY));
+            }
 
-            if (yLevelDifference > 0) 
-                directionsWithWeight.Add(new DirectionWithWeight(Direction.Down, weightY));
-            else
-                directionsWithWeight.Add(new DirectionWithWeight(Direction.Up, weightY));
-
-            return GetWeightedRandomDirection(directionsWithWeight, accumulatedWeight);
+            if (yLevelDifference > 0)
+            {
+                directionsWithWeight.Add(new DirectionWithWeight(Direction.Down, BETTER_PROPABILITY));
+                directionsWithWeight.Add(new DirectionWithWeight(Direction.Up, WORST_PROPABILITY));
+            }
+            else if (yLevelDifference == 0)
+            {
+                directionsWithWeight.Add(new DirectionWithWeight(Direction.Down, DEFAULT_PROBABILITY));
+                directionsWithWeight.Add(new DirectionWithWeight(Direction.Up, DEFAULT_PROBABILITY));
+            }
+            else 
+            {
+                directionsWithWeight.Add(new DirectionWithWeight(Direction.Down, WORST_PROPABILITY));
+                directionsWithWeight.Add(new DirectionWithWeight(Direction.Up, BETTER_PROPABILITY));
+            }
+            return RandomDirection(directionsWithWeight);
         }
-  
+
+        public bool IsSegmentsOverlap(Segment segment)
+        {
+            if (SegmentList.Count() > 0)
+            {
+                var lastSegment = SegmentList.Last();
+                if (lastSegment.IsHorizontalSegmenet() == segment.IsHorizontalSegmenet())
+                {
+                    if (lastSegment.Direction != segment.Direction)
+                        return true;
+                }
+            }
+
+            return false;
+        }
 
         public void AddSegment(Segment segment)
         {
+            ChangeLocationOfActualPoint(segment.Direction);
+
             if (SegmentList.Count() > 0)
             {
                 var lastSegment = SegmentList.Last();
@@ -141,9 +185,9 @@ namespace Lab01
             }
         }
 
-        public bool IsPathFinished(Point actualPoint)
+        public bool IsPathFinished()
         {
-            return ActualPoint.Equals(actualPoint);
+            return ActualPoint.Equals(EndPoint);
         }
 
         public int GetPenalty()
@@ -161,6 +205,20 @@ namespace Lab01
             {
                 Console.WriteLine($"\t\t {i + 1}. {SegmentList[i]}");
             }
+        }
+
+        public int CountIntersects(Segment segment)
+        {
+            if (SegmentList.Count == 0)
+                return 0;
+
+            var counter = 0;
+            for (int i = 0; i < SegmentList.Count; i++)
+            {
+                if (SegmentList[i].IsIntersect(segment))
+                    counter++;
+            }
+            return counter;
         }
     }
 }
