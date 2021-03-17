@@ -13,6 +13,11 @@ namespace Lab01
             Y = y;
         }
 
+        public bool IsTheSamePoint(int x, int y)
+        {
+            return X == x && Y == y;
+        }
+
         public override bool Equals(object obj)
         {
             if (obj == null)
@@ -32,7 +37,7 @@ namespace Lab01
 
         public object Clone()
         {
-            return this.MemberwiseClone();
+            return MemberwiseClone();
         }
     }
 }

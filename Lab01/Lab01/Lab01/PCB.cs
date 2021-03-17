@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace Lab01
 {
-    class PCB
+    class PCB: ICloneable
     {
+        private static int INTERSECTION_WEIGHT = 20;
         public int BoardX { get; set; }
         public int BoardY { get; set; }
         public List<(Point, Point)> PointList { get; set; }
@@ -44,7 +44,8 @@ namespace Lab01
 
         public bool IsIntersecToMyself(Path path, Segment segment)
         {
-            var overlap = path.IsSegmentsOverlap(segment);
+            if (path.IsSegmentsOverlap(segment))
+                return false;
 
             foreach (var pathInBoard in Paths)
             {
@@ -52,8 +53,6 @@ namespace Lab01
                 {
                     var intersectCount = pathInBoard.CountIntersects(segment);
                     if (intersectCount == 1 || intersectCount == 0)
-                        return false;
-                    else if (intersectCount == 2 && overlap)
                         return false;
                     else 
                         return true;
@@ -90,7 +89,7 @@ namespace Lab01
         public void BuildRandomPaths()
         {
             for (int i = 0; i < PointList.Count; i++)
-                Paths.Add(new Path(PointList[i].Item1, PointList[i].Item2));
+                Paths.Add(new Path( (Point) PointList[i].Item1.Clone(), (Point) PointList[i].Item2.Clone()));
 
             for (int i = 0; i < Paths.Count; i++)
             {
@@ -116,6 +115,7 @@ namespace Lab01
             int i = 1;
             foreach (var path in Paths)
             {
+                Console.WriteLine("===========================");
                 Console.WriteLine($"{i}. ścieżka:");
                 path.PathInfo();
                 i++;
@@ -142,7 +142,18 @@ namespace Lab01
                     }
                 }
             }
-            return counter;
+            return INTERSECTION_WEIGHT * counter;
+        }
+
+        public object Clone()
+        {
+            foreach (var valueTuple in PointList)
+            {
+                valueTuple.Item1.Clone();
+                valueTuple.Item2.Clone();
+            }
+            PCB copyPcb = new PCB(BoardX, BoardY, PointList);
+            return copyPcb;
         }
     }
 }

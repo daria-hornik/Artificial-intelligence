@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Globalization;
 using System.Linq;
 
 namespace Lab01
 {
-    class Path
+    class Path: ICloneable
     {
         private static int STEP = 1;
         private static int DEFAULT_PROBABILITY = 2;
@@ -24,6 +22,22 @@ namespace Lab01
             SegmentList = new List<Segment>();
         }
 
+        public Point GetStartPoint()
+        {
+            return SegmentList[0].StartPoint;
+        }
+
+        private struct DirectionWithWeight
+        {
+            public int Weight;
+            public Direction Direction;
+
+            public DirectionWithWeight(Direction direction, int weight)
+            {
+                Weight = weight;
+                Direction = direction;
+            }
+        }
 
         public int GetPathLength()
         {
@@ -49,19 +63,7 @@ namespace Lab01
                 Direction = GetWeightedRandomDirection(),
             };
         }
-
-        private struct DirectionWithWeight
-        {
-            public int Weight;
-            public Direction Direction;
-
-            public DirectionWithWeight(Direction direction, int weight)
-            {
-                Weight = weight;
-                Direction = direction;
-            }
-        }
-
+        
         private Direction RandomDirection(List<DirectionWithWeight> directions)
         {
             Random rand = new Random();
@@ -136,7 +138,6 @@ namespace Lab01
                         return true;
                 }
             }
-
             return false;
         }
 
@@ -219,6 +220,77 @@ namespace Lab01
                     counter++;
             }
             return counter;
+        }
+
+        private bool RepairSegment()
+        {
+            for (int i =0; i<SegmentList.Count-1; i++)
+            {
+                if (SegmentList[i].Direction == SegmentList[i + 1].Direction)
+                {
+                    SegmentList[i].Length++;
+                    SegmentList.RemoveAt(i + 1);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public void ConnectSegmentBegin(Segment prevSegment, Segment segment)
+        {
+            if (prevSegment.IsPointBeforTheLast(segment.StartPoint))
+            {
+                if (prevSegment.Length == 1)
+                    SegmentList.Remove(prevSegment);
+                else
+                   prevSegment.Length--;
+                RepairSegment();
+            }
+            else
+                prevSegment.Length++;
+            
+        }
+
+        public bool ConnectSegmentEnd(Segment segment, Segment nextSegment)
+        {
+            if (nextSegment.IsSecondPoint(segment.GetEndPoint()))
+            {
+                if (nextSegment.Length == 1)
+                    SegmentList.Remove(nextSegment);
+                else
+                {
+                    nextSegment.StartPoint = segment.GetEndPoint();
+                    nextSegment.Length--;
+                }
+                RepairSegment();
+            }
+            else
+            {
+                nextSegment.StartPoint = segment.GetEndPoint();
+                nextSegment.Length++;
+                return true;
+            }
+            return false;
+        }
+
+        public Segment GetNextSegment(Segment segment)
+        {
+            for (int i=0; i<SegmentList.Count-1; i++)
+            {
+                if (SegmentList[i].Equals(segment))
+                    return SegmentList[i];
+            }
+
+            return null;
+        }
+        public object Clone()
+        {
+            Path copyPath = new Path(ActualPoint.Clone() as Point, EndPoint.Clone() as Point);
+            for (var i=0; i<SegmentList.Count(); i++)
+            {
+                copyPath.SegmentList[i].Clone();
+            }
+            return copyPath;
         }
     }
 }

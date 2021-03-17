@@ -1,36 +1,152 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using static System.Int32;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
 
 namespace Lab01
 {
     class Environment
     {
-        public static (int, int, List<(Point, Point)>) ReadDataFromFile()
-        {
-            using (var sr = new StreamReader(@"C:\Users\horni\source\repos\Lab01\lab01_problemy_testowe\zad0.txt"))
-            {
-                var boardDimension = sr.ReadLine();
-                int  x = Parse(boardDimension.Split(';')[0]);
-                var y = Parse(boardDimension.Split(';')[1]);
+        private static int TOURNAMENT_SIZE = 3;
 
-                List<(Point, Point)> pointsList = new List<(Point, Point)>();
-                foreach (var line in sr.ReadToEnd().Split('\n'))
-                {
-                    var coordinates = line.Split(';').Select(Parse).ToList(); ;
-                    pointsList.Add((new Point(coordinates[0], coordinates[1]), new Point(coordinates[2], coordinates[3])));
-                }
-                return (x, y, pointsList);
+        public List<PCB> Population  { get; set; }
+        public List<PCB> Parents { get; set; }
+
+        public Environment()
+        {
+            Population = new List<PCB>();
+            Parents = new List<PCB>();
+        }
+
+        public void GetRandomPopulation(int k)
+        {
+            for (int i = 0; i < k; i++)
+            {
+                var (x, y, pointList) = Data.ReadDataFromFile();
+                PCB board = new PCB(x, y, pointList);
+                board.BuildRandomPaths();
+                Population.Add(board);
             }
         }
-        
-        public static void Main(string[] args)
+
+        public PCB TournamentSelection()
         {
-            var (x, y, pointList) = ReadDataFromFile();
-            PCB board = new PCB(x, y, pointList);
-            board.BuildRandomPaths();
-            board.PathsInfo();
+            Random rm = new Random();
+            List<PCB> selectedIndividuals = new List<PCB>();
+            var populationSize = Population.Count;
+            for (int i = 0; i < TOURNAMENT_SIZE; i++)
+            {
+                var index = rm.Next(populationSize);
+                selectedIndividuals.Add(Population[index]);
+               
+                var temp = Population[index];
+                Population[index] = Population[populationSize - 1];
+                Population[populationSize - 1] = temp;
+                populationSize--;
+            }
+
+            var minValue = selectedIndividuals[0].CountPenaltyFunction();
+            PCB bestIndividual = selectedIndividuals[0];
+            foreach (var individual in selectedIndividuals)
+            {
+                int penaltyFunction = individual.CountPenaltyFunction();
+                if (penaltyFunction < minValue)
+                {
+                    minValue = penaltyFunction;
+                    bestIndividual = individual;
+                }
+                              
+            }
+            Parents.Add(bestIndividual);
+            return bestIndividual;
+        }
+
+        public PCB Crossover(PCB pcb1, PCB pcb2)
+        {
+            PCB pcbChild = (PCB) pcb1.Clone();
+            for (int i = 0; i < pcb1.Paths.Count; i++)
+            {
+                var temp = pcbChild.Paths[i].Clone();
+                pcbChild.Paths[i] = (Path) pcb2.Paths[i].Clone();
+                if (pcbChild.CountIntersection() != 0)
+                    pcbChild.Paths[i] = (Path) temp;
+                else
+                    return pcbChild;
+            }
+
+            return null;
+        }
+
+        public PCB Mutation(PCB pcb)
+        {
+            Random rn = new Random();
+            var pathIndex = rn.Next(0, pcb.Paths.Count);
+            var segmentIndex = rn.Next(pcb.Paths[pathIndex].SegmentList.Count-1);
+
+            var path = pcb.Paths[pathIndex];
+            var segment = path.SegmentList[segmentIndex];
+
+            Direction randomDirection = segment.GetPerpendicularDirection();
+            var startPoint = segment.StartPoint;
+
+            Console.WriteLine($"Mutacja ścieżki {pathIndex+1}, segmentu {segmentIndex+1} w {randomDirection}.");
+            //ustawianie nowego segmentu: czyli start pointu dla starego segmentu
+            switch (randomDirection)
+            {
+                case Direction.Down:
+                    segment.StartPoint = new Point(startPoint.X, startPoint.Y-1);
+                    break;
+                case Direction.Up:
+                    segment.StartPoint = new Point(startPoint.X, startPoint.Y+1);
+                    break;
+                case Direction.Right:
+                    segment.StartPoint = new Point(startPoint.X + 1, startPoint.Y);
+                    break;
+                case Direction.Left:
+                    segment.StartPoint = new Point(startPoint.X - 1, startPoint.Y);
+                    break;
+            }
+            //tylko jeden segment
+            /*if (path.SegmentList.Count == 1)
+            {
+                var newStartSegment = new Segment((Point)path.GetStartPoint().Clone(), randomDirection);
+                path.SegmentList.Insert(0, newStartSegment);
+                path.SegmentList.Add(new Segment(segment.GetEndPoint(), newStartSegment.GetOpposedDirection()));
+
+                return pcb;
+            }*/
+            
+            //pierwszy segment
+            if (segmentIndex == 0)
+            {
+                var newStartSegment = new Segment((Point) pcb.PointList[pathIndex].Item1.Clone(), randomDirection);
+                path.SegmentList.Insert(0, newStartSegment);
+
+                if (path.SegmentList.Count == 2)
+                {
+                    path.SegmentList.Add(new Segment(segment.GetEndPoint(), newStartSegment.GetOpposedDirection()));
+                }
+                else
+                {
+                    var nextSeg = path.GetNextSegment(segment);
+                    path.ConnectSegmentEnd(segment, nextSeg);
+                }
+                return pcb;
+            }
+
+            var prevSegment = path.SegmentList[segmentIndex - 1];
+            /*
+            var nextSegment = path.GetNextSegment(segment);
+            */
+
+            var nextSegment = path.SegmentList[segmentIndex + 1];
+            //naprawiamy pierwszą część
+            path.ConnectSegmentBegin(prevSegment, segment);
+
+            //naprawiamy drugą część
+            if (nextSegment != null)
+                path.ConnectSegmentEnd(segment, nextSegment);
+
+            return pcb;
         }
     }
 }

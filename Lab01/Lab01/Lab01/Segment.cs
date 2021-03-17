@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace Lab01
 {
@@ -10,31 +11,46 @@ namespace Lab01
         Right = 2
     }
 
-    class Segment
+    class Segment : ICloneable
     {
         public Point StartPoint { get; set; }
         public int Length { get; set; }
         public Direction Direction { get; set; }
-       
+
+        public Segment()
+        {
+        }
+
+        public Segment(Point point, Direction direction)
+        {
+            StartPoint = point;
+            Length = 1;
+            Direction = direction;
+        }
 
         public Point GetEndPoint()
         {
+            return GetNthSegmentPoint(Length);
+        }
+
+        public Point GetNthSegmentPoint(int n)
+        {
+            if (n > Length)
+                return null;
+
             switch (Direction)
             {
                 case Direction.Down:
-                    return new Point(StartPoint.X, StartPoint.Y - Length);
+                    return new Point(StartPoint.X, StartPoint.Y - n);
                 case Direction.Up:
-                    return new Point(StartPoint.X, StartPoint.Y + Length);
+                    return new Point(StartPoint.X, StartPoint.Y + n);
                 case Direction.Left:
-                    return new Point(StartPoint.X - Length, StartPoint.Y);
+                    return new Point(StartPoint.X - n, StartPoint.Y);
                 case Direction.Right:
-                    return new Point(StartPoint.X + Length, StartPoint.Y);
+                    return new Point(StartPoint.X + n, StartPoint.Y);
             }
+
             return null;
-        }
-        public bool IsVerticalSegment()
-        {
-            return Direction == Direction.Down || Direction == Direction.Up;
         }
 
         public bool IsHorizontalSegmenet()
@@ -58,7 +74,8 @@ namespace Lab01
 
         private bool CheckIfPointBelongsToSegment(Point x, Point y, Point z)
         {
-            return Math.Min(x.X, y.X) <= z.X && z.X <= Math.Max(x.X, y.X) && Math.Min(x.Y, y.Y) <= z.Y && z.Y <= Math.Max(x.Y, y.Y);
+            return Math.Min(x.X, y.X) <= z.X && z.X <= Math.Max(x.X, y.X) && Math.Min(x.Y, y.Y) <= z.Y &&
+                   z.Y <= Math.Max(x.Y, y.Y);
         }
 
         public bool IsIntersect(Segment s)
@@ -83,6 +100,67 @@ namespace Lab01
             if (v4 == 0 && CheckIfPointBelongsToSegment(A, B, D)) return true;
 
             //odcinki nie mają punktów wspólnych
+            return false;
+        }
+
+        public Direction GetPerpendicularDirection()
+        {
+            Random rn = new Random();
+            var r = rn.Next(0, 2);
+            if (IsHorizontalSegmenet())
+            {
+                if (r == 1)
+                    return Direction.Up;
+                return Direction.Down;
+            }
+            else
+            {
+                if (r == 1)
+                    return Direction.Right;
+                return Direction.Left;
+            }
+        }
+
+        public bool IsPointBeforTheLast(Point point)
+        {
+            return GetNthSegmentPoint(Length - 1).Equals(point);
+        }
+
+        public bool IsSecondPoint(Point point)
+        {
+            return GetNthSegmentPoint(1).Equals(point);
+        }
+
+        public object Clone()
+        {
+            Segment copySegment = new Segment();
+            copySegment.StartPoint = copySegment.StartPoint.Clone() as Point;
+            return copySegment;
+        }
+
+        public Direction GetOpposedDirection()
+        {
+            switch (Direction)
+            {
+                case Direction.Down:
+                    return Direction.Up;
+                case Direction.Up:
+                    return Direction.Down;
+                case Direction.Left:
+                    return Direction.Right;
+                default:
+                    return Direction.Left;
+            }
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj == null)
+                return false;
+
+            if ((obj as Segment).StartPoint.Equals(StartPoint) && (obj as Segment).Length == Length &&
+                (obj as Segment).Direction == Direction)
+                return true;
             return false;
         }
     }
