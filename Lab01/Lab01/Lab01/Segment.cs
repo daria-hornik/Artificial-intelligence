@@ -134,7 +134,9 @@ namespace Lab01
         public object Clone()
         {
             Segment copySegment = new Segment();
-            copySegment.StartPoint = copySegment.StartPoint.Clone() as Point;
+            copySegment.StartPoint = StartPoint.Clone() as Point;
+            copySegment.Length = Length;
+            copySegment.Direction = Direction;
             return copySegment;
         }
 

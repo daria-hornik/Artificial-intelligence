@@ -6,8 +6,10 @@ namespace Lab01
     class PCB: ICloneable
     {
         private static int INTERSECTION_WEIGHT = 20;
+        private int MAX_QUALITY;
         public int BoardX { get; set; }
         public int BoardY { get; set; }
+        public int Quality { get; set; }
         public List<(Point, Point)> PointList { get; set; }
         public List<Path> Paths { get; set; }
 
@@ -17,6 +19,7 @@ namespace Lab01
             Paths = new List<Path>();
             BoardX = x;
             BoardY = y;
+            MAX_QUALITY = Paths.Count * x * y* x;
         }
 
         public int CountPenaltyFunction()
@@ -26,6 +29,12 @@ namespace Lab01
                 sum += path.GetPenalty();
             sum += CountIntersection();
             return sum;
+        }
+
+        public int CountQuality()
+        {
+            Quality = MAX_QUALITY - CountPenaltyFunction();
+            return Quality;
         }
 
         //Funkcje ograniczające
@@ -153,6 +162,9 @@ namespace Lab01
                 valueTuple.Item2.Clone();
             }
             PCB copyPcb = new PCB(BoardX, BoardY, PointList);
+
+            foreach (var path in Paths)
+                copyPcb.Paths.Add((Path) path.Clone());
             return copyPcb;
         }
     }

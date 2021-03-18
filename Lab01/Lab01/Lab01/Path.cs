@@ -268,6 +268,7 @@ namespace Lab01
             {
                 nextSegment.StartPoint = segment.GetEndPoint();
                 nextSegment.Length++;
+                RepairSegment();
                 return true;
             }
             return false;
@@ -286,9 +287,10 @@ namespace Lab01
         public object Clone()
         {
             Path copyPath = new Path(ActualPoint.Clone() as Point, EndPoint.Clone() as Point);
+            copyPath.SegmentList = new List<Segment>();
             for (var i=0; i<SegmentList.Count(); i++)
             {
-                copyPath.SegmentList[i].Clone();
+                copyPath.SegmentList.Add(SegmentList[i].Clone() as Segment);
             }
             return copyPath;
         }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 
 namespace Lab01
 {
@@ -60,15 +61,16 @@ namespace Lab01
             return bestIndividual;
         }
 
+        //do poprawy, 2 z jednego, 3 z drugiego 
         public PCB Crossover(PCB pcb1, PCB pcb2)
         {
             PCB pcbChild = (PCB) pcb1.Clone();
             for (int i = 0; i < pcb1.Paths.Count; i++)
             {
-                var temp = pcbChild.Paths[i].Clone();
+                var temp = pcbChild.Paths[i];
                 pcbChild.Paths[i] = (Path) pcb2.Paths[i].Clone();
                 if (pcbChild.CountIntersection() != 0)
-                    pcbChild.Paths[i] = (Path) temp;
+                    pcbChild.Paths[i] = temp;
                 else
                     return pcbChild;
             }
@@ -104,8 +106,8 @@ namespace Lab01
                 case Direction.Left:
                     segment.StartPoint = new Point(startPoint.X - 1, startPoint.Y);
                     break;
-            }
             //tylko jeden segment
+            }
             /*if (path.SegmentList.Count == 1)
             {
                 var newStartSegment = new Segment((Point)path.GetStartPoint().Clone(), randomDirection);
@@ -114,7 +116,10 @@ namespace Lab01
 
                 return pcb;
             }*/
-            
+            Segment prevSegment;
+            Segment nextSegment;
+
+
             //pierwszy segment
             if (segmentIndex == 0)
             {
@@ -127,18 +132,17 @@ namespace Lab01
                 }
                 else
                 {
-                    var nextSeg = path.GetNextSegment(segment);
-                    path.ConnectSegmentEnd(segment, nextSeg);
+                    nextSegment = path.SegmentList[segmentIndex + 2];
+                    path.ConnectSegmentEnd(segment, nextSegment);
                 }
+
                 return pcb;
             }
 
-            var prevSegment = path.SegmentList[segmentIndex - 1];
-            /*
-            var nextSegment = path.GetNextSegment(segment);
-            */
 
-            var nextSegment = path.SegmentList[segmentIndex + 1];
+            prevSegment = path.SegmentList[segmentIndex - 1];
+            nextSegment = path.SegmentList[segmentIndex + 1];
+
             //naprawiamy pierwszą część
             path.ConnectSegmentBegin(prevSegment, segment);
 
@@ -147,6 +151,27 @@ namespace Lab01
                 path.ConnectSegmentEnd(segment, nextSegment);
 
             return pcb;
+        }
+
+        public PCB Roulette()
+        {
+            Random rn = new Random();
+            var indicator = rn.NextDouble();
+            var sum = 0;
+
+            foreach (var individual in Population)
+                sum += individual.CountQuality();
+            var selected = indicator * sum;
+
+            double secondIndicator = 0;
+            foreach (var pcb in Population)
+            {
+                secondIndicator += pcb.Quality * indicator;
+                if (secondIndicator >= selected)
+                    return pcb;
+            }
+
+            return Population.Last();
         }
     }
 }

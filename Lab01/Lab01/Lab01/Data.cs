@@ -24,19 +24,5 @@ namespace Lab01
                 return (x, y, pointsList);
             }
         }
-
-        public static void Main(string[] args)
-        {
-            var (x, y, pointList) = ReadDataFromFile();
-            PCB board = new PCB(x, y, pointList);
-            board.BuildRandomPaths();
-            board.PathsInfo();
-
-            Environment env = new Environment();
-            env.GetRandomPopulation(6);
-            var a = env.TournamentSelection();
-            a.PathsInfo();
-            env.Mutation(a).PathsInfo();
-        }
     }
 }
