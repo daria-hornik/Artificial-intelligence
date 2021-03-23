@@ -24,7 +24,6 @@ namespace Lab01
             PCB parent1;
             PCB parent2;
             PCB bestPCD, worstPCB, avgPCB;
-            double std;
 
             for (int i = 0; i < generation; i++)
             {
@@ -42,14 +41,15 @@ namespace Lab01
                     envRoulette.Parents.Add(mutatedChild);
                 }
                 //statystyki
-                var (best, worst, avg) = envRoulette.GestStatistic();
+                var (best, worst, avg, std) = envRoulette.GestStatistic();
                 Console.WriteLine("Najlepszy:");
                 best.PathsInfo();
                 Console.WriteLine("Najgorszy:");
                 worst.PathsInfo();
 
                 Console.WriteLine($"Srednia: {avg}");
-                
+                Console.WriteLine($"Std: {std}");
+
                 envRoulette.Population = new List<PCB>(envRoulette.Parents);
                 envRoulette.Parents.Clear();
             }
@@ -73,13 +73,14 @@ namespace Lab01
                     envTournament.Parents.Add(mutatedChild);
                 }
                 //statystyki
-                var (best, worst, avg) = envTournament.GestStatistic();
+                var (best, worst, avg, std) = envTournament.GestStatistic();
                 Console.WriteLine("Najlepszy:");
                 best.PathsInfo();
                 Console.WriteLine("Najgorszy:");
                 worst.PathsInfo();
 
                 Console.WriteLine($"Srednia: {avg}");
+                Console.WriteLine($"Std: {std}");
                 envTournament.Population = new List<PCB>(envTournament.Parents);
                 envTournament.Parents.Clear();
             }

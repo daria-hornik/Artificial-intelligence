@@ -181,7 +181,7 @@ namespace Lab01
             return Population.Last();
         }
 
-        public (PCB, PCB, double) GestStatistic()
+        public (PCB, PCB, double, double) GestStatistic()
         {
             var minValue = Population[0].CountPenaltyFunction();
             var maxValue = minValue;
@@ -204,8 +204,16 @@ namespace Lab01
                     worstIndividual = individual;
                 }
             }
+            var average = penaultySum / PopulationSize;
+            var sum = 0.0;
+            foreach (var individual in Population)
+            {
+                int penaltyFunction = individual.CountPenaltyFunction();
+                sum += (penaltyFunction-average)* (penaltyFunction - average);
+            }
+            var std = Math.Sqrt(sum / Population.Count);
 
-            return (bestIndividual, worstIndividual, penaultySum/PopulationSize);
+            return (bestIndividual, worstIndividual, average, std);
         }
 
         public Object Clone()

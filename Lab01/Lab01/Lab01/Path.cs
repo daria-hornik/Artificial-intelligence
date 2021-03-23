@@ -238,24 +238,22 @@ namespace Lab01
 
         public bool RemoveUselessSegments()
         {
-            if (SegmentList.Count > 1)
-            {
-                bool change;
-                do
-                {
-                    change = false;
-                    for (int i = SegmentList.Count - 1; i >= 0; --i)
-                    {
-                        var endPoint = SegmentList[i].GetEndPoint();
-                        if (SegmentList.FirstOrDefault(x => Equals(x.StartPoint, endPoint)) == null)
-                        {
-                            SegmentList.RemoveAt(i);
-                            change = true;
-                        }
-                    }
+            //bool change;
+            //do
+            //{
+            //    change = false;
+            //    for (int i = SegmentList.Count - 1; i >= 0; --i)
+            //    {
+            //        var endPoint = SegmentList[i].GetEndPoint();
+            //        if (SegmentList.FirstOrDefault(x => Equals(x.StartPoint, endPoint)) == null && SegmentList.Count!=1)
+            //        {
+            //            SegmentList.RemoveAt(i);
+            //            change = true;
+            //        }
+            //    }
 
-                } while (change);
-            }
+            //} while (change);
+            
             return true;
         }
         public void ConnectSegmentBegin(Segment prevSegment, Segment segment)
