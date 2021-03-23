@@ -236,6 +236,26 @@ namespace Lab01
             return false;
         }
 
+        public bool RemoveUselessSegments()
+        {
+            bool change;
+            do
+            {
+                change = false;
+                for (int i = SegmentList.Count - 1; i >= 0; --i)
+                {
+                    var endPoint = SegmentList[i].GetEndPoint();
+                    if (SegmentList.FirstOrDefault(x => Equals(x.StartPoint, endPoint)) == null)
+                    {
+                        SegmentList.RemoveAt(i);
+                        change = true;
+                    }
+                }
+
+            } while (change);
+
+            return true;
+        }
         public void ConnectSegmentBegin(Segment prevSegment, Segment segment)
         {
             if (prevSegment.IsPointBeforTheLast(segment.StartPoint))
@@ -271,6 +291,8 @@ namespace Lab01
                 RepairSegment();
                 return true;
             }
+            RemoveUselessSegments();
+
             return false;
         }
 

@@ -6,10 +6,11 @@ namespace Lab01
     class PCB: ICloneable
     {
         private static int INTERSECTION_WEIGHT = 20;
-        private int MAX_QUALITY;
+        private static int CHECKCONSTRAINTSCOUNTER = 200;
+        
         public int BoardX { get; set; }
         public int BoardY { get; set; }
-        public int Quality { get; set; }
+        public int Penalty { get; set; }
         public List<(Point, Point)> PointList { get; set; }
         public List<Path> Paths { get; set; }
 
@@ -19,7 +20,6 @@ namespace Lab01
             Paths = new List<Path>();
             BoardX = x;
             BoardY = y;
-            MAX_QUALITY = Paths.Count * x * y* x;
         }
 
         public int CountPenaltyFunction()
@@ -28,13 +28,13 @@ namespace Lab01
             foreach (var path in Paths)
                 sum += path.GetPenalty();
             sum += CountIntersection();
-            return sum;
+            return sum + Penalty;
         }
 
-        public int CountQuality()
+        public double CountQuality()
         {
-            Quality = MAX_QUALITY - CountPenaltyFunction();
-            return Quality;
+            double result = 1.0 / CountPenaltyFunction();
+            return result;
         }
 
         //Funkcje ograniczające
@@ -104,6 +104,7 @@ namespace Lab01
             {
                 while (!Paths[i].IsPathFinished())
                 {
+                    var counter = 0;
                     var isCorrectSegment = false;
                     while (!isCorrectSegment)
                     {
@@ -112,6 +113,14 @@ namespace Lab01
                         {
                             Paths[i].AddSegment(newSegment);
                             isCorrectSegment = true;
+                        }
+
+                        counter++;
+                        if (counter > CHECKCONSTRAINTSCOUNTER)
+                        {
+                            Paths[i].AddSegment(newSegment);
+                            isCorrectSegment = true;
+                            Penalty += INTERSECTION_WEIGHT * INTERSECTION_WEIGHT;
                         }
                     }
                 }

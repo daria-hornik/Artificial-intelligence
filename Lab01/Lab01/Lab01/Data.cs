@@ -9,7 +9,7 @@ namespace Lab01
     {
         public static (int, int, List<(Point, Point)>) ReadDataFromFile()
         {
-            using (var sr = new StreamReader(@"C:\Users\horni\source\repos\Lab01\lab01_problemy_testowe\zad0.txt"))
+            using (var sr = new StreamReader(@"D:\Skaranie boskie\ArtificialInteligence\Lab\Assignment 1 Genetic Algorithms-20210308\lab01_problemy_testowe\zad0.txt"))
             {
                 var boardDimension = sr.ReadLine();
                 int x = Parse(boardDimension.Split(';')[0]);
