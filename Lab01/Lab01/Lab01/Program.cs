@@ -10,7 +10,7 @@ namespace Lab01
         {
             var (x, y, pointList) = Data.ReadDataFromFile();
             int repetitions = 6;
-            int populationSize = 20;
+            int populationSize = 10;
             double pm = 0.5;
 
             // Console.WriteLine("Losowe rozwiązanie: ");

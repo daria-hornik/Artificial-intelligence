@@ -42,7 +42,7 @@ namespace Lab01
         {
             foreach (var pathInBoard in Paths)
             {
-                if (!pathInBoard.Equals(path))
+                if (pathInBoard != path)
                 {
                     if (pathInBoard.CountIntersects(segment) != 0)
                         return true;
@@ -90,9 +90,12 @@ namespace Lab01
 
         public bool IsAllConstraintCorrect(Path path, Segment segment)
         {
-            return !IsIntersectWithOthers(path, segment) && IsInBoard(segment.GetEndPoint()) &&
-                   !IsIntersecToMyself(path, segment)
+            //return !IsIntersectWithOthers(path, segment) && IsInBoard(segment.GetEndPoint()) &&
+            //       !IsIntersecToMyself(path, segment)
+            //       && !IsActualPointAStartEndPointOtherPaths(path, segment.GetEndPoint());
+            return IsInBoard(segment.GetEndPoint())
                    && !IsActualPointAStartEndPointOtherPaths(path, segment.GetEndPoint());
+
         }
 
         public void BuildRandomPaths()
@@ -113,15 +116,13 @@ namespace Lab01
                         {
                             Paths[i].AddSegment(newSegment);
                             isCorrectSegment = true;
-                        }
-
-                        counter++;
-                        if (counter > CHECKCONSTRAINTSCOUNTER)
+                        } else if (counter > CHECKCONSTRAINTSCOUNTER)
                         {
                             Paths[i].AddSegment(newSegment);
                             isCorrectSegment = true;
                             Penalty += INTERSECTION_WEIGHT * INTERSECTION_WEIGHT;
                         }
+                        counter++;
                     }
                 }
             }
