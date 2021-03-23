@@ -22,6 +22,10 @@ namespace Lab01
             BoardY = y;
         }
 
+        public PCB()
+        {
+        }
+
         public int CountPenaltyFunction()
         {
             var sum = 0;

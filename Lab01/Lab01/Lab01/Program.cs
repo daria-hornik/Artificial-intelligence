@@ -9,11 +9,10 @@ namespace Lab01
         public static void Main(string[] args)
         {
             var (x, y, pointList) = Data.ReadDataFromFile();
-            int generation = 6;
-            int populationSize = 10;
+            int generation = 100;
+            int populationSize = 20;
             double pm = 0.5;
 
-            // Console.WriteLine("Losowe rozwiązanie: ");
             PCB board = new PCB(x, y, pointList);
             board.BuildRandomPaths();
             // board.PathsInfo();
@@ -24,6 +23,8 @@ namespace Lab01
             PCB parent1;
             PCB parent2;
             PCB bestPCD, worstPCB, avgPCB;
+            PCB solutionRoulette = new PCB();
+            PCB solutionTournament = new PCB();
 
             for (int i = 0; i < generation; i++)
             {
@@ -52,6 +53,10 @@ namespace Lab01
 
                 envRoulette.Population = new List<PCB>(envRoulette.Parents);
                 envRoulette.Parents.Clear();
+                if (i == 0 || solutionRoulette.CountQuality() < best.CountQuality())
+                {
+                    solutionRoulette = best;
+                }
             }
 
             //tournament
@@ -83,23 +88,17 @@ namespace Lab01
                 Console.WriteLine($"Std: {std}");
                 envTournament.Population = new List<PCB>(envTournament.Parents);
                 envTournament.Parents.Clear();
+                if (i == 0 || solutionTournament.CountQuality() < best.CountQuality())
+                {
+                    solutionTournament = best;
+                }
             }
-
-
-            Console.WriteLine("\n\nTurniej:");
-            var pcb1 = envTournament.TournamentSelection();
-            pcb1.PathsInfo();
-
-            Console.WriteLine("\n\nRuletka:");
-            var pcb2 = envTournament.Roulette();
-            pcb2.PathsInfo();
-
-            Console.WriteLine("\n\nOperator krzyżowania");
-            var pcb3 = envTournament.Crossover(pcb1, pcb2);
-            pcb3.PathsInfo();
-
-            Console.WriteLine("\n\nMutacja: ");
-            envTournament.Mutation(pcb1, pm).PathsInfo();
+            Console.WriteLine("================");
+            Console.WriteLine("Podsumowanie");
+            Console.WriteLine("Roulette:");
+            solutionRoulette.PathsInfo();
+            Console.WriteLine("\nTournament:");
+            solutionTournament.PathsInfo();
         }
     }
 }

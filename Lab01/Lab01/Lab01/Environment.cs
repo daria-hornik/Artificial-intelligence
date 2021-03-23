@@ -7,7 +7,7 @@ namespace Lab01
 {
     class Environment : ICloneable
     {
-        private static int TOURNAMENT_SIZE = 3;
+        private static int TOURNAMENT_SIZE = 10;
 
         public List<PCB> Population { get; set; }
         public List<PCB> Parents { get; set; }
