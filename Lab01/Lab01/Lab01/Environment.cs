@@ -62,7 +62,6 @@ namespace Lab01
                 }
             }
 
-            Parents.Add(bestIndividual);
             return bestIndividual;
         }
 

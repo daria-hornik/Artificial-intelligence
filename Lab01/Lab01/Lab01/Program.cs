@@ -9,7 +9,7 @@ namespace Lab01
         public static void Main(string[] args)
         {
             var (x, y, pointList) = Data.ReadDataFromFile();
-            int repetitions = 6;
+            int generation = 6;
             int populationSize = 10;
             double pm = 0.5;
 
@@ -26,7 +26,7 @@ namespace Lab01
             PCB bestPCD, worstPCB, avgPCB;
             double std;
 
-            for (int i = 0; i < repetitions; i++)
+            for (int i = 0; i < generation; i++)
             {
                 parent1 = envRoulette.Roulette();
                 parent2 = envRoulette.Roulette();
@@ -55,23 +55,25 @@ namespace Lab01
             }
 
             //tournament
-            for (int i = 0; i < repetitions; i++)
+            for (int i = 0; i < generation; i++)
             {
-                parent1 = envRoulette.TournamentSelection();
-                parent2 = envRoulette.TournamentSelection();
-                while (parent2==parent1)
+                parent1 = envTournament.TournamentSelection();
+                parent2 = envTournament.TournamentSelection();
+                while (parent2 == parent1)
                 {
-                    parent2 = envRoulette.TournamentSelection();
+                    parent2 = envTournament.TournamentSelection();
                 }
+                envTournament.Parents.Add(parent1);
+                envTournament.Parents.Add(parent2);
 
-                while (envRoulette.Parents.Count < populationSize)
+                while (envTournament.Parents.Count < populationSize)
                 {
                     var child = envTournament.Crossover(parent1, parent2);
                     var mutatedChild = envTournament.Mutation(child, pm);
                     envTournament.Parents.Add(mutatedChild);
                 }
                 //statystyki
-                var (best, worst, avg) = envRoulette.GestStatistic();
+                var (best, worst, avg) = envTournament.GestStatistic();
                 Console.WriteLine("Najlepszy:");
                 best.PathsInfo();
                 Console.WriteLine("Najgorszy:");
