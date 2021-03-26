@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 
 namespace Lab01
@@ -33,7 +32,6 @@ namespace Lab01
             }
         }
 
-
         public PCB TournamentSelection()
         {
             Random rm = new Random();
@@ -65,7 +63,6 @@ namespace Lab01
             return bestIndividual;
         }
 
-
         public PCB Crossover(PCB pcb1, PCB pcb2)
         {
             Random rn = new Random();
@@ -78,7 +75,6 @@ namespace Lab01
 
             return pcbChild;
         }
-
 
         public PCB Mutation(PCB pcb, double pm)
         {
@@ -113,14 +109,6 @@ namespace Lab01
                     //tylko jeden segment
                 }
 
-                /*if (path.SegmentList.Count == 1)
-                {
-                    var newStartSegment = new Segment((Point)path.GetStartPoint().Clone(), randomDirection);
-                    path.SegmentList.Insert(0, newStartSegment);
-                    path.SegmentList.Add(new Segment(segment.GetEndPoint(), newStartSegment.GetOpposedDirection()));
-    
-                    return pcb;
-                }*/
                 Segment prevSegment;
                 Segment nextSegment;
 
@@ -167,9 +155,7 @@ namespace Lab01
 
             foreach (var individual in Population)
                 sum += individual.CountQuality();
-            // var selected = indicator * sum;
 
-            double secondIndicator = 0;
             var sum2 = 0.0;
             foreach (var pcb in Population)
             {

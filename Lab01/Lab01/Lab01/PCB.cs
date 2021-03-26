@@ -31,7 +31,7 @@ namespace Lab01
             var sum = 0;
             foreach (var path in Paths)
                 sum += path.GetPenalty();
-            sum += CountIntersection();
+            sum += INTERSECTION_WEIGHT * CountIntersection();
             return sum + Penalty;
         }
 
@@ -97,7 +97,7 @@ namespace Lab01
             //return !IsIntersectWithOthers(path, segment) && IsInBoard(segment.GetEndPoint()) &&
             //       !IsIntersecToMyself(path, segment)
             //       && !IsActualPointAStartEndPointOtherPaths(path, segment.GetEndPoint());
-            return IsInBoard(segment.GetEndPoint())
+            return IsInBoard(segment.GetEndPoint()) 
                    && !IsActualPointAStartEndPointOtherPaths(path, segment.GetEndPoint());
 
         }
@@ -145,7 +145,7 @@ namespace Lab01
             }
 
             Console.WriteLine($"Całkowita kara: {CountPenaltyFunction()}");
-            Console.WriteLine($"Kara za przecięcia: {CountIntersection()}");
+            Console.WriteLine($"Liczba przecięć: {CountIntersection()}");
     }
 
         public int CountIntersection()
@@ -165,7 +165,7 @@ namespace Lab01
                     }
                 }
             }
-            return INTERSECTION_WEIGHT * counter;
+            return counter;
         }
 
         public object Clone()

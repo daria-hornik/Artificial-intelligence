@@ -82,7 +82,6 @@ namespace Lab01
                     index++;
                 }
             }
-          
             int r = rand.Next(0, sum);
             return tempTab[r]; 
         }
@@ -236,26 +235,6 @@ namespace Lab01
             return false;
         }
 
-        public bool RemoveUselessSegments()
-        {
-            //bool change;
-            //do
-            //{
-            //    change = false;
-            //    for (int i = SegmentList.Count - 1; i >= 0; --i)
-            //    {
-            //        var endPoint = SegmentList[i].GetEndPoint();
-            //        if (SegmentList.FirstOrDefault(x => Equals(x.StartPoint, endPoint)) == null && SegmentList.Count!=1)
-            //        {
-            //            SegmentList.RemoveAt(i);
-            //            change = true;
-            //        }
-            //    }
-
-            //} while (change);
-            
-            return true;
-        }
         public void ConnectSegmentBegin(Segment prevSegment, Segment segment)
         {
             if (prevSegment.IsPointBeforTheLast(segment.StartPoint))
@@ -268,7 +247,6 @@ namespace Lab01
             }
             else
                 prevSegment.Length++;
-            
         }
 
         public bool ConnectSegmentEnd(Segment segment, Segment nextSegment)
@@ -291,8 +269,6 @@ namespace Lab01
                 RepairSegment();
                 return true;
             }
-            //RemoveUselessSegments();
-
             return false;
         }
 
@@ -306,6 +282,7 @@ namespace Lab01
 
             return null;
         }
+
         public object Clone()
         {
             Path copyPath = new Path(ActualPoint.Clone() as Point, EndPoint.Clone() as Point);
