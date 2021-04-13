@@ -1,11 +1,7 @@
-﻿using Lab02;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Lab02.Map
-
 {
-
     class MapConstraint : Constraint<Point, Color>
     {
         public Point Point1 { get; set; }
