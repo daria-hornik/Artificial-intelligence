@@ -21,5 +21,10 @@ namespace Lab02.Map
         {
             return $"({X}, {Y})" ;
         }
+
+        public override bool Equals(object obj)
+        {
+            return (obj as Point).X == X && (obj as Point).Y == Y;
+        }
     }
 }

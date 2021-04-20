@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections;
+﻿using Lab02.Map;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,6 +11,7 @@ namespace Lab02
         public Dictionary<V, List<D>> Domains { get; set; }
         public Dictionary<V, List<Constraint<V, D>>> Constraints { get; set; }
         public Dictionary<V, List<V>> Neighbours { get; set; }
+        public static int NodeCounter = 0;
 
         public CSP(List<V> variables, Dictionary<V, List<D>> domains, Dictionary<V, List<V>> neighbours)
         {
@@ -20,12 +21,12 @@ namespace Lab02
             Constraints = new Dictionary<V, List<Constraint<V, D>>>();
 
             foreach (var variable in Variables)
-                Constraints[variable] = new List<Constraint<V, D>>();
+                Constraints.Add(variable, new List<Constraint<V, D>>());
         }
 
         public bool AddConstraint(Constraint<V, D> constraint)
         {
-            foreach (var variable in constraint.Variables)
+            foreach (V variable in constraint.Variables)
             {
                 if (!Variables.Contains(variable))
                 {
@@ -47,22 +48,51 @@ namespace Lab02
             return true;
         }
 
+
+        public Dictionary<V, D> ForwardCheck(Dictionary<V, D> set)
+        {
+            if (set.Count == Variables.Count)
+                return set;
+
+            if (!AC3())
+                return null;
+
+            var first = MinRV(set); //MinRV(set); //RandomVariable(set);  //
+            foreach (var value in LCV(first, set))
+            //foreach (var value in RandomValue(first))
+            {
+                var localSet = new Dictionary<V, D>(set);
+                localSet[first] = value;
+                NodeCounter++;
+                if (IsCorrect(first, localSet))
+                {
+                    ForwardChecking(first, value, localSet);
+                    var result = ForwardCheck(localSet);
+                    if (result != null)
+                        return result;
+                }
+            }
+            return null;
+        }
+
+
         public Dictionary<V, D> BackTrackingSearch(Dictionary<V, D> set)
         {
             if (set.Count == Variables.Count)
                 return set;
 
-            if(!AC3())
+            if (!AC3())
                 return null;
 
-            var first = MRV(set);
+            var first = MinRV(set); //MinRV(set); //RandomVariable(set);  //
             foreach (var value in LCV(first, set))
+            //foreach (var value in RandomValue(first))
             {
                 var localSet = new Dictionary<V, D>(set);
                 localSet[first] = value;
+                NodeCounter++;
                 if (IsCorrect(first, localSet))
                 {
-                    ForwardChecking(first, value, localSet);
                     var result = BackTrackingSearch(localSet);
                     if (result != null)
                         return result;
@@ -107,16 +137,62 @@ namespace Lab02
         /// </summary>
         /// <param name="set"></param>
         /// <returns></returns>
-        public V MRV(Dictionary<V, D> set)
+        public V MinRV(Dictionary<V, D> set)
         {
             V choosenVariable = Variables[0];
-            int minCounter = Domains[choosenVariable].Count;
+            int minCounter = 0;
+
+            foreach (var variable in Variables)
+            {
+                if (!set.ContainsKey(variable))
+                {
+                    choosenVariable = variable;
+                    minCounter = Domains[variable].Count;
+                    break;
+                }
+            }
 
             foreach (V variable in Variables)
             {
                 if (!set.ContainsKey(variable))
                 {
-                    if (Domains[variable].Count < minCounter)
+                    if (Domains[variable].Count <= minCounter)
+                    {
+                        minCounter = Domains[variable].Count;
+                        choosenVariable = variable;
+                    }
+                }
+            }
+            return choosenVariable;
+        }
+
+
+        /// <summary>
+        /// Maximum remaining values heuristic.
+        /// Wybierz zmienną z możliwie największą liczbą wartości.
+        /// </summary>
+        /// <param name="set"></param>
+        /// <returns></returns>
+        public V MaxRV(Dictionary<V, D> set)
+        {
+            V choosenVariable = Variables[0];
+            int minCounter = 0;
+
+            foreach (var variable in Variables)
+            {
+                if (!set.ContainsKey(variable))
+                {
+                    choosenVariable = variable;
+                    minCounter = Domains[variable].Count;
+                    break;
+                }
+            }
+
+            foreach (V variable in Variables)
+            {
+                if (!set.ContainsKey(variable))
+                {
+                    if (Domains[variable].Count <= minCounter)
                     {
                         minCounter = Domains[variable].Count;
                         choosenVariable = variable;
@@ -143,11 +219,11 @@ namespace Lab02
             int conflictNumber = 0;
             foreach (V neighbour in Neighbours[variable])
             {
-                var localSet = new Dictionary<V, D>(set);
-                if (!set.ContainsKey(neighbour)) { 
-                localSet.Add(neighbour, value);
-                if (IsCorrect(neighbour, localSet))
-                    conflictNumber++;
+                if (!set.ContainsKey(neighbour))
+                {
+                    set.Add(neighbour, value);
+                    if (IsCorrect(neighbour, set))
+                        conflictNumber++;
                 }
             }
             return conflictNumber;
@@ -165,8 +241,10 @@ namespace Lab02
             List<D> domains = new List<D>();
             foreach (D value in Domains[variable])
             {
-                conflictsCounter.Add(value, CountConflict(variable, value, set));
+                var localSet = new Dictionary<V, D>(set);
+                conflictsCounter.Add(value, CountConflict(variable, value, localSet));
             }
+
             return conflictsCounter.OrderByDescending(x => x.Value).Select(i => i.Key).ToList();
         }
 
@@ -201,7 +279,7 @@ namespace Lab02
                             conflictCounter++;
                             break;
                         }
-                    }                    
+                    }
                 }
 
                 if (conflictCounter == Domains[xj].Count)
@@ -216,16 +294,14 @@ namespace Lab02
         public bool AC3()
         {
             Queue<(V, V)> queue = new Queue<(V, V)>();
-            if (queue.Count == 0)
+            foreach (var variable in Variables)
             {
-                foreach (var variable in Variables)
+                foreach (var neighbour in Neighbours[variable])
                 {
-                    foreach (var neighbour in Neighbours[variable])
-                    {
-                        queue.Enqueue((variable, neighbour));
-                    }
+                    queue.Enqueue((variable, neighbour));
                 }
             }
+
 
             while (queue.Count > 0)
             {
