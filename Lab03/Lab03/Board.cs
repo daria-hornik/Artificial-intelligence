@@ -1,18 +1,22 @@
-﻿using System;
+﻿using Lab03.AlOperators;
+using System;
 using System.Collections.Generic;
 
 namespace Lab03
 {
-    class Board
+    class Board : ICloneable
     {
-        static int MINMAX_DEPTH = 3;
+        static int MINMAX_DEPTH = 5;
+        static int OPPONENT_WELL = 13;
+        static int YOUR_WELL = 6;
+
         public List<int> BoardCounter { get; set; }
         public Player You { get; set; }
         public Player Opponent { get; set; }
 
         public Board(bool youStart)
         {
-            BoardCounter = new List<int>() { 6, 4, 4, 4, 4, 4, 0, 4, 4, 4, 4, 4, 4, 0 };
+            BoardCounter = new List<int>() { 4, 4, 4, 4, 4, 4, 0, 4, 4, 4, 4, 4, 4, 0 };
             You = new Player();
             Opponent = new Player();
             if (youStart)
@@ -70,7 +74,7 @@ namespace Lab03
                 return index == BoardCounter.Count / 2 - 1;
         }
 
-        public int Sow(int startIndex, bool isOpponent)
+        public void Sow(int startIndex, bool isOpponent)
         {
             var seedNumber = BoardCounter[startIndex];
             int i;
@@ -78,7 +82,7 @@ namespace Lab03
             {
                 BoardCounter[startIndex]--;
 
-                if (!IsOpponentWell(isOpponent, (startIndex + i + 1)%BoardCounter.Count))
+                if (!IsOpponentWell(isOpponent, (startIndex + i + 1) % BoardCounter.Count))
                     BoardCounter[(startIndex + 1 + i) % BoardCounter.Count]++;
                 else
                 {
@@ -87,10 +91,21 @@ namespace Lab03
                     seedNumber++;
                 }
             }
-            return (startIndex + i) % BoardCounter.Count;
         }
 
-        private bool MakeMoveAndRepeat(bool isOpponent)
+        public int GetTheLastIndexForSowing(int startIndex)
+        {
+            var seedNumber = BoardCounter[startIndex];
+            return (startIndex + seedNumber) % BoardCounter.Count;
+        }
+
+        public bool RepeatMove(int index, bool isOpponent)
+        {
+            int lastIndex = GetTheLastIndexForSowing(index);
+            return isOpponent ? lastIndex == OPPONENT_WELL : lastIndex == YOUR_WELL;
+        }
+
+        public int MakeMove(bool isOpponent)
         {
             int pit;
             do
@@ -105,9 +120,9 @@ namespace Lab03
             else
                 index = GetIndexForYou(pit);
 
-            var lastIndex = Sow(index, isOpponent);
+            Sow(index, isOpponent);
 
-            return IsYourWell(isOpponent, lastIndex);
+            return index;
         }
 
         public void DrawBoard()
@@ -141,11 +156,11 @@ namespace Lab03
             }
             Console.WriteLine("|");
 
-            Console.Write("    |");
+            Console.Write("     ");
             for (int i = 1; i < 7; i++)
                 Console.Write($"--------");
 
-            Console.WriteLine("|");
+            Console.WriteLine(" ");
 
             Console.Write("\n     ");
             for (int i = 1; i < 7; i++)
@@ -155,11 +170,11 @@ namespace Lab03
 
         public int RateTheBoard(bool isOpponent)
         {
-            var score = CountScore();
-            return isOpponent ? score.Item2 - score.Item1: score.Item1 - score.Item2; 
+            var score = CountScores();
+            return isOpponent ? score.Item2 - score.Item1 : score.Item1 - score.Item2;
         }
 
-        public (int, int) CountScore()
+        public (int, int) CountScores()
         {
             int yourScore = 0;
             int opponentScore = 0;
@@ -202,37 +217,79 @@ namespace Lab03
 
         public void ShowResult()
         {
-            var score = CountScore();
+            var score = CountScores();
             if (score.Item1 == score.Item2)
-                Console.WriteLine("Remis");
+                Console.WriteLine("Remis!");
             else if (score.Item1 > score.Item2)
                 Console.WriteLine("Zwyciężyłeś!");
             else
                 Console.WriteLine("Przegrałeś!");
         }
 
-        /// <summary>
-        /// Metoda definiująca drzewo do podejmowania decyzji, minimalizująca zyski dla oponenta, maksymalizująca dla ciebie 
-        /// </summary>
-        /// <param name="depth"></param>
-        /// <param name="isOpponent"></param>
-        /// <returns>Zwraca najlepszy ruch</returns>
-       /* public (int, int) MinMax(int depth, bool isOpponent)
+        public List<int> GetAllPossibleMoves(bool isOpponent)
         {
-            if (depth == 0 || IsFinished())
+            int startIndex, endIndex;
+            startIndex = isOpponent ? YOUR_WELL + 1 : 0;
+            endIndex = isOpponent ? OPPONENT_WELL : YOUR_WELL;
+            List<int> indexList = new List<int>();
+
+            for (int i = startIndex; i < endIndex; i++)
             {
-                return;
+                if (BoardCounter[i] != 0)
+                    indexList.Add(i - startIndex);
             }
+            return indexList;
+        }
+
+
+        /// <summary>
+        /// metoda zwraca najlepszy ruch 
+        /// </summary>
+        /// <param name="deep"></param>
+        /// <param name="isOpponent"></param>
+        /// <returns></returns>
+        public (int, int) FindBestMove(int deep, bool isOpponent, Node root = null)
+        {
+            if (deep == 0)
+                return (root.Value.RateTheBoard(isOpponent), root.SelectedMoveIndex);
+
+            if (root == null)
+            {
+                root = new Node((Board)this.Clone());
+            }
+
+            var allPossibleMoves = GetAllPossibleMoves(isOpponent);
+            root.BuildNextLevel(allPossibleMoves, isOpponent);
 
             if (isOpponent)
             {
-
+                int minValue = 1000;
+                int minMove = 0;
+                Node kid;
+                for (int i = 0; i < root.Children.Count; i++)
+                {
+                    kid = root.Children[i];
+                    var actualValue = kid.Value.FindBestMove(deep - 1, isOpponent, kid).Item1;
+                    minValue = minValue < actualValue ? actualValue : minValue;
+                    minMove = kid.SelectedMoveIndex;
+                }
+                return (minValue, minMove);
             }
             else
             {
-
+                int maxValue = -1000;
+                int maxMove = 0; ;
+                Node kid;
+                for (int i = 0; i < root.Children.Count; i++)
+                {
+                    kid = root.Children[i];
+                    var actualValue = kid.Value.FindBestMove(deep - 1, isOpponent, kid).Item1;
+                    maxValue = maxValue < actualValue ? actualValue : maxValue;
+                    maxMove = kid.SelectedMoveIndex;
+                }
+                return (maxValue, maxMove);
             }
-        }*/
+        }
 
         public void Play()
         {
@@ -242,34 +299,45 @@ namespace Lab03
             {
                 if (You.First)
                 {
-                    bool repeat;
+                    int index;
                     do
                     {
                         Console.WriteLine("Twoja kolej...");
-                        repeat = MakeMoveAndRepeat(false);
+                        Console.WriteLine($"Najlpszy ruch: {FindBestMove(MINMAX_DEPTH, false).Item2 + 1}");
+                        index = MakeMove(false);
                         DrawBoard();
-                    } while (repeat);
-                   
+                    } while (RepeatMove(index, false));
+
 
                     Console.WriteLine("Kolej przeciwnika...");
-                    MakeMoveAndRepeat(true);
+                    Console.WriteLine($"Najlpszy ruch: {FindBestMove(MINMAX_DEPTH, true).Item2 + 1}");
+                    MakeMove(true);
                     DrawBoard();
                 }
                 else
                 {
                     Console.WriteLine("Kolej przeciwnika...");
-                    MakeMoveAndRepeat(true);
+                    Console.WriteLine("Najlpszy ruch: " + FindBestMove(MINMAX_DEPTH, true));
+                    MakeMove(true);
                     DrawBoard();
 
                     Console.WriteLine("Twoja kolej...");
-                    MakeMoveAndRepeat(false);
+                    Console.WriteLine("Najlpszy ruch: " + FindBestMove(MINMAX_DEPTH, false));
+                    MakeMove(false);
                     DrawBoard();
                 }
 
-                score = CountScore();
+                score = CountScores();
                 Console.WriteLine($"Wyniki: {score.Item1}: {score.Item2}");
             }
             ShowResult();
+        }
+
+        public object Clone()
+        {
+            Board CopyBoard = You.First ? new Board(true) : new Board(false);
+            CopyBoard.BoardCounter = new List<int>(BoardCounter);
+            return CopyBoard;
         }
     }
 }
